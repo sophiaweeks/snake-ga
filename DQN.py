@@ -47,9 +47,9 @@ class DQNAgent(object):
         elif eaten:
             self.reward = 10
         else:
-            for i, direction in enumerate(player_direction):
-                if player_direction[i] == direction_to_food[i]:
-                    self.reward += 1
+            for i in range(len(direction_to_food)):
+                if direction_to_food[i] == 1 and player_direction[(i+1) % len(direction_to_food)] == 1:
+                    self.reward -= 1
 
     def remember(self, state, action, next_state, done):
         self.memory.append((state, action, self.reward, next_state, done))
