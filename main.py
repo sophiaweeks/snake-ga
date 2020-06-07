@@ -115,7 +115,7 @@ def train(display_on, speed, params):
             game.do_move(move)
             
             new_state = game.get_state()
-            agent.set_reward(game.crash, game.player.eaten)
+            agent.set_reward(game.crash, game.player.eaten, new_state[3:7], new_state[7:])
             
             # train short memory base on the new action and state
             agent.train_short_memory(state, move, new_state, game.crash)
