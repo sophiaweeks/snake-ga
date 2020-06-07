@@ -8,7 +8,7 @@ Created on Sat Jun  6 18:01:15 2020
 import pygame
 from Game import Game
 import argparse
-from dqn import DQNAgent
+from DQN import DQNAgent
 from random import randint
 from keras.utils import to_categorical
 import numpy as np
