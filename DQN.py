@@ -49,9 +49,9 @@ class DQNAgent(object):
         # Now check if it is moving in the opposite direction as the food and lower reward accordingly
         else:
             if (direction_to_food[0] == 1 and player_direction[1] == 1) or (direction_to_food[1] == 1 and player_direction[0] == 1):
-                self.reward -= 2
-            if (direction_to_food[2] == 1 and player_direction[3] == 1) or (direction_to_food[3] == 1 and player_direction[2] == 1):
-                self.reward -= 2
+                self.reward -= 1
+            elif (direction_to_food[2] == 1 and player_direction[3] == 1) or (direction_to_food[3] == 1 and player_direction[2] == 1):
+                self.reward -= 1
                 
 
     def remember(self, state, action, next_state, done):

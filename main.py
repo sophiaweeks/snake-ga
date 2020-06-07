@@ -143,7 +143,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     params = define_parameters()
     parser.add_argument("--display", type=bool, default=True)
-    parser.add_argument("--speed", type=int, default=10)
+    parser.add_argument("--speed", type=int, default=1)
     args = parser.parse_args()
     
     if params['train']:
