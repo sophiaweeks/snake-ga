@@ -8,8 +8,10 @@ Created on Sat Jun  6 18:01:15 2020
 import pygame
 from Game import Game
 import argparse
+from dqn import DQNAgent
 from random import randint
 from keras.utils import to_categorical
+import numpy as np
 
 def define_parameters():
     params = dict()
@@ -40,6 +42,8 @@ def run(display_on, speed, params):
     pygame.init()
     pygame.font.init()
     
+    agent = DQNAgent(params)
+    
     counter_games = 0
     #score_plot = []
     #counter_plot = []
@@ -54,7 +58,10 @@ def run(display_on, speed, params):
             if handle_game_event(game):
                 return
             
-            move = to_categorical(randint(0, 2), num_classes=3)
+            state = game.get_state()          
+            prediction = agent.model.predict(state.reshape((1,11)))
+            move = to_categorical(np.argmax(prediction[0]), num_classes=3)
+            
             game.do_move(move)
             
             if display_on:

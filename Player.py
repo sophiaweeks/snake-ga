@@ -40,7 +40,10 @@ class Player(object):
         self.absorb_food()            
         self.process_move(move)
         self.increment_position()
+        if self.get_crashed():
+            return True # report crash
         self.update_body_positions()
+        return False
     
     def absorb_food(self):
         if self.eaten:
@@ -56,13 +59,16 @@ class Player(object):
             
     def increment_position(self):
         if self.current_direction == Direction.up:
-            self.y += 1
+            self.y -= 1
         elif self.current_direction == Direction.right:
             self.x += 1
         elif self.current_direction == Direction.down:
-            self.y -= 1
+            self.y += 1
         elif self.current_direction == Direction.left:
             self.x -= 1
+            
+    def get_crashed(self):
+        return [self.x, self.y] in self.body_positions
             
     def update_body_positions(self):
         if self.body_positions[-1][0] != self.x or self.body_positions[-1][1] != self.y:

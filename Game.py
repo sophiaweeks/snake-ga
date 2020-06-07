@@ -5,9 +5,10 @@ Created on Sat Jun  6 16:46:22 2020
 @author: sophia.weeks
 """
 import pygame
-from Player import Player
+from Player import Player, Direction
 from Food import Food
 from random import randint
+import numpy as np
 
 class Game:
     def __init__(self, game_width, game_height):
@@ -17,8 +18,8 @@ class Game:
         self.unit_size = 20
         self.left_boundary = self.unit_size
         self.right_boundary = game_width - (self.unit_size * 2)
-        self.bottom_boundary = self.unit_size
-        self.top_boundary = game_height - (self.unit_size * 2)
+        self.top_boundary = self.unit_size
+        self.bottom_boundary = game_height - (self.unit_size * 2)
         self.gameDisplay = pygame.display.set_mode((game_width, game_height + 60))
         self.bg = pygame.image.load("img/background.png")
         self.font = pygame.font.SysFont('Segoe UI', 20)
@@ -32,10 +33,30 @@ class Game:
     
         
     def do_move(self, move):
-        self.player.do_move(move)
+        if self.player.do_move(move):
+            # player crashed into self
+            self.crash = True
+            return
+        
         if self.is_player_crashed():
+            # player crashed into border
             self.crash = True
         self.try_eat()
+        
+    def get_state(self):
+        return np.array([
+            self.get_danger_player_right(),
+            self.get_danger_player_straight(),
+            self.get_danger_player_left(),
+            self.get_moving_left(),
+            self.get_moving_right(),
+            self.get_moving_up(),
+            self.get_moving_down(),
+            self.get_food_left(),
+            self.get_food_right(),
+            self.get_food_up(),
+            self.get_food_down()
+            ])
         
     def update_ui(self):
         self.gameDisplay.fill((255, 255, 255))
@@ -51,7 +72,7 @@ class Game:
         
     def initialize_player(self):
         x = (int)(randint(self.left_boundary, self.right_boundary) / self.unit_size)
-        y = (int)(randint(self.bottom_boundary, self.top_boundary) / self.unit_size)
+        y = (int)(randint(self.top_boundary, self.bottom_boundary) / self.unit_size)
         self.player = Player(x, y)
         
     def initialize_food(self):
@@ -63,8 +84,8 @@ class Game:
         player_y = self.player.y * self.unit_size
         return (player_x < self.left_boundary or 
             player_x > self.right_boundary or 
-            player_y < self.bottom_boundary or 
-            player_y > self.top_boundary)
+            player_y < self.top_boundary or 
+            player_y > self.bottom_boundary)
     
     def try_eat(self):
         player = self.player
@@ -83,7 +104,7 @@ class Game:
         player = self.player
         
         x = (int)(randint(self.left_boundary, self.right_boundary) / self.unit_size)
-        y = (int)(randint(self.bottom_boundary, self.top_boundary) / self.unit_size)
+        y = (int)(randint(self.top_boundary, self.bottom_boundary) / self.unit_size)
 
         if [x, y] not in player.body_positions:
             self.food.update_position(x, y)
@@ -110,3 +131,88 @@ class Game:
         food = self.food
         unit_size = self.unit_size
         self.gameDisplay.blit(food.image, (food.x * unit_size, food.y * unit_size))
+        
+    def get_danger_player_right(self):
+        direction = self.player.current_direction
+
+        if direction == Direction.left:
+            return self.get_danger_up()
+        if direction == Direction.right:
+            return self.get_danger_down()
+        if direction == Direction.up:
+            return self.get_danger_right()
+        if direction == Direction.down:
+            return self.get_danger_left()
+    
+    def get_danger_player_straight(self):
+        direction = self.player.current_direction
+
+        if direction == Direction.left:
+            return self.get_danger_left()
+        if direction == Direction.right:
+            return self.get_danger_right()
+        if direction == Direction.up:
+            return self.get_danger_up()
+        if direction == Direction.down:
+            return self.get_danger_down()
+    
+    def get_danger_player_left(self):
+        direction = self.player.current_direction
+
+        if direction == Direction.left:
+            return self.get_danger_down()
+        if direction == Direction.right:
+            return self.get_danger_up()
+        if direction == Direction.up:
+            return self.get_danger_left()
+        if direction == Direction.down:
+            return self.get_danger_right()
+    
+    def get_danger_up(self):
+        player = self.player
+        next_position_up_y = self.player.y - 1
+        return (int)(next_position_up_y * self.unit_size < self.top_boundary or 
+                [player.x, next_position_up_y] in player.body_positions)
+    
+    def get_danger_right(self):
+        player = self.player
+        next_position_right_x = self.player.x + 1
+        return (int)(next_position_right_x * self.unit_size > self.right_boundary or 
+                [next_position_right_x, player.y] in player.body_positions)
+    
+    def get_danger_down(self):
+        player = self.player
+        next_position_down_y = self.player.y + 1
+        return (int)(next_position_down_y * self.unit_size > self.bottom_boundary or 
+                [player.x, next_position_down_y] in player.body_positions)
+    
+    def get_danger_left(self):
+        player = self.player
+        next_position_left_x = self.player.x - 1
+        return (int)(next_position_left_x * self.unit_size < self.left_boundary or 
+                [next_position_left_x, player.y] in player.body_positions)
+   
+    def get_moving_left(self):
+        return (int)(self.player.current_direction == Direction.left)
+   
+    def get_moving_right(self):
+        return (int)(self.player.current_direction == Direction.right)
+   
+    def get_moving_up(self):     
+        return (int)(self.player.current_direction == Direction.up)
+   
+    def get_moving_down(self):
+        return (int)(self.player.current_direction == Direction.down)
+   
+    def get_food_left(self):
+        return (int)(self.food.x < self.player.x)
+   
+    def get_food_right(self):
+        return (int)(self.food.x > self.player.x)
+        
+    def get_food_up(self):
+        return (int)(self.food.y < self.player.y)
+   
+    def get_food_down(self):
+        return (int)(self.food.y > self.player.y)
+   
