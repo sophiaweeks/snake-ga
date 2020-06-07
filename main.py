@@ -12,6 +12,8 @@ from dqn import DQNAgent
 from random import randint
 from keras.utils import to_categorical
 import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 def define_parameters():
     params = dict()
@@ -29,6 +31,18 @@ def define_parameters():
     params['bayesian_optimization'] = False
     return params
 
+def plot_seaborn(array_counter, array_score):
+    sns.set(color_codes=True)
+    ax = sns.regplot(
+        np.array([array_counter])[0],
+        np.array([array_score])[0],
+        color="b",
+        x_jitter=.1,
+        line_kws={'color': 'green'}
+    )
+    ax.set(xlabel='games', ylabel='score')
+    plt.show()
+    
 def handle_game_event(game):
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -55,8 +69,8 @@ def play(display_on, speed, params):
     
     counter_games = 0
     high_score = 0;
-    #score_plot = []
-    #counter_plot = []
+    score_plot = []
+    counter_plot = []
     
     while counter_games < params['episodes']:
         game = Game(440, 440, high_score)
@@ -80,10 +94,13 @@ def play(display_on, speed, params):
             
         counter_games += 1
         print(f'Game {counter_games}      Score: {game.score}')
-        
         high_score = game.high_score
+        
+        score_plot.append(game.score)
+        counter_plot.append(counter_games)
 
     pygame.quit()
+    plot_seaborn(counter_plot, score_plot)
 
         
 def train(display_on, speed, params):
@@ -94,8 +111,8 @@ def train(display_on, speed, params):
     
     counter_games = 0
     high_score = 0;
-    #score_plot = []
-    #counter_plot = []
+    score_plot = []
+    counter_plot = []
     
     while counter_games < params['episodes']:
         game = Game(440, 440, high_score)
@@ -131,10 +148,14 @@ def train(display_on, speed, params):
         print(f'Game {counter_games}      Score: {game.score}')
         high_score = game.high_score
         
+        score_plot.append(game.score)
+        counter_plot.append(counter_games)
+        
         agent.replay_new(agent.memory, params['batch_size'])
         
     agent.model.save_weights(params['weights_path'])
     pygame.quit()
+    plot_seaborn(counter_plot, score_plot)
 
 
 if __name__ == '__main__':
