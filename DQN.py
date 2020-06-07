@@ -31,10 +31,10 @@ class DQNAgent(object):
 
     def network(self):
         model = Sequential()
-        model.add(Dense(output_dim=self.first_layer, activation='relu', input_dim=11))
-        model.add(Dense(output_dim=self.second_layer, activation='relu'))
-        model.add(Dense(output_dim=self.third_layer, activation='relu'))
-        model.add(Dense(output_dim=3, activation='softmax'))
+        model.add(Dense(units=self.first_layer, activation='relu', input_dim=11))
+        model.add(Dense(units=self.second_layer, activation='relu'))
+        model.add(Dense(units=self.third_layer, activation='relu'))
+        model.add(Dense(units=3, activation='softmax'))
         opt = Adam(self.learning_rate)
         model.compile(loss='mse', optimizer=opt)
 
@@ -46,10 +46,9 @@ class DQNAgent(object):
             self.reward = -10
         elif eaten:
             self.reward = 10
-        return self.reward
 
-    def remember(self, state, action, reward, next_state, done):
-        self.memory.append((state, action, reward, next_state, done))
+    def remember(self, state, action, next_state, done):
+        self.memory.append((state, action, self.reward, next_state, done))
 
     def replay_new(self, memory, batch_size):
         if len(memory) > batch_size:
@@ -64,10 +63,10 @@ class DQNAgent(object):
             target_f[0][np.argmax(action)] = target
             self.model.fit(np.array([state]), target_f, epochs=1, verbose=0)
 
-    def train_short_memory(self, state, action, reward, next_state, done):
-        target = reward
+    def train_short_memory(self, state, action, next_state, done):
+        target = self.reward
         if not done:
-            target = reward + self.gamma * np.amax(self.model.predict(next_state.reshape((1, 11)))[0])
+            target = self.reward + self.gamma * np.amax(self.model.predict(next_state.reshape((1, 11)))[0])
         target_f = self.model.predict(state.reshape((1, 11)))
         target_f[0][np.argmax(action)] = target
         self.model.fit(state.reshape((1, 11)), target_f, epochs=1, verbose=0)

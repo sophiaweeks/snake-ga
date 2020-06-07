@@ -11,7 +11,7 @@ from random import randint
 import numpy as np
 
 class Game:
-    def __init__(self, game_width, game_height):
+    def __init__(self, game_width, game_height, high_score):
         pygame.display.set_caption('SnakeGen')
         self.game_width = game_width
         self.game_height = game_height
@@ -27,7 +27,7 @@ class Game:
         
         self.crash = False
         self.score = 0
-        self.high_score = 0
+        self.high_score = high_score
         self.initialize_player()
         self.initialize_food()
     

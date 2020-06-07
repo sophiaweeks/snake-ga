@@ -38,18 +38,28 @@ def handle_game_event(game):
             game.crash = True
     return False
 
-def run(display_on, speed, params):
+def get_move(agent, state):
+    # perform random actions based on agent.epsilon, or choose the action
+    if randint(0, 1) < agent.epsilon:
+        return to_categorical(randint(0, 2), num_classes=3)
+        
+    # predict action based on the old state
+    prediction = agent.model.predict(state.reshape((1, 11)))
+    return to_categorical(np.argmax(prediction[0]), num_classes=3)
+
+def play(display_on, speed, params):
     pygame.init()
     pygame.font.init()
     
     agent = DQNAgent(params)
     
     counter_games = 0
+    high_score = 0;
     #score_plot = []
     #counter_plot = []
     
     while counter_games < params['episodes']:
-        game = Game(440, 440)
+        game = Game(440, 440, high_score)
         
         if display_on:
             game.update_display()
@@ -70,6 +80,61 @@ def run(display_on, speed, params):
             
         counter_games += 1
         print(f'Game {counter_games}      Score: {game.score}')
+        
+        high_score = game.high_score
+
+    pygame.quit()
+
+        
+def train(display_on, speed, params):
+    pygame.init()
+    pygame.font.init()
+    
+    agent = DQNAgent(params)
+    
+    counter_games = 0
+    high_score = 0;
+    #score_plot = []
+    #counter_plot = []
+    
+    while counter_games < params['episodes']:
+        game = Game(440, 440, high_score)
+        
+        if display_on:
+            game.update_display()
+        
+        while not game.crash:
+            if handle_game_event(game):
+                return
+            
+            # agent.epsilon is set to give randomness to actions
+            agent.epsilon = 1 - (counter_games * params['epsilon_decay_linear'])
+            
+            state = game.get_state()          
+            move = get_move(agent, state)
+            game.do_move(move)
+            
+            new_state = game.get_state()
+            agent.set_reward(game.crash, game.player.eaten)
+            
+            # train short memory base on the new action and state
+            agent.train_short_memory(state, move, new_state, game.crash)
+            
+            # store the new data into a long term memory
+            agent.remember(state, move, new_state, game.crash)
+            
+            if display_on:
+                game.update_display()
+                pygame.time.wait(speed)
+            
+        counter_games += 1
+        print(f'Game {counter_games}      Score: {game.score}')
+        high_score = game.high_score
+        
+        agent.replay_new(agent.memory, params['batch_size'])
+        
+    agent.model.save_weights(params['weights_path'])
+    pygame.quit()
 
 
 if __name__ == '__main__':
@@ -81,4 +146,7 @@ if __name__ == '__main__':
     parser.add_argument("--speed", type=int, default=50)
     args = parser.parse_args()
     
-    run(args.display, args.speed, params)
+    if params['train']:
+        train(args.display, args.speed, params)
+    else:
+        play(args.display, args.speed, params)
