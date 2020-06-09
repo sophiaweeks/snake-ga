@@ -8,7 +8,7 @@ Created on Sat Jun  6 18:01:15 2020
 import pygame
 from Game import Game
 import argparse
-from dqn import DQNAgent
+from DQN import DQNAgent
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
