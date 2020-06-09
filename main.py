@@ -9,6 +9,7 @@ import pygame
 from Game import Game
 import argparse
 from DQN import DQNAgent
+from DDQN import DDQNAgent
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -23,10 +24,14 @@ def define_parameters():
     params['episodes'] = 150            
     params['memory_size'] = 2500
     params['batch_size'] = 500
-    params['weights_path'] = 'weights/weights.hdf5'
+    params['dqn_weights_path'] = 'weights/dqn/weights.hdf5'
+    params['ddqn_weights_path'] = 'weights/ddqn/weights.hdf5'
+    params['ddqn_target_weights_path'] = 'weights/ddqn/target_weights.hdf5'
     params['load_weights'] = True
     params['train'] = False
     params['bayesian_optimization'] = False
+    params['agent_type'] = 'ddqn'
+    params['tau'] = .01
     return params
 
 def plot_seaborn(array_counter, array_score):
@@ -63,7 +68,8 @@ def play(display_on, speed, params):
     pygame.font.init()
     
     agent = DQNAgent(params)
-    agent.epsilon = 0
+    if params['agent_type'] == 'ddqn':
+        agent = DDQNAgent(params)
     
     counter_games = 0
     high_score = 0;
@@ -105,6 +111,8 @@ def train(display_on, speed, params):
     pygame.font.init()
     
     agent = DQNAgent(params)
+    if params['agent_type'] == 'ddqn':
+        agent = DDQNAgent(params)
     
     counter_games = 0
     high_score = 0;
@@ -149,7 +157,7 @@ def train(display_on, speed, params):
         
         agent.replay_memory(params['batch_size'])
         
-    agent.model.save_weights(params['weights_path'])
+    agent.save_weights()
     pygame.quit()
     plot_seaborn(counter_plot, score_plot)
 
