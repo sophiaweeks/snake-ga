@@ -1,6 +1,7 @@
 from keras.optimizers import Adam
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout
+from keras.utils import to_categorical
 import random
 import numpy as np
 import pandas as pd
@@ -9,7 +10,6 @@ import collections
 
 class DQNAgent(object):
     def __init__(self, params):
-        self.reward = 0
         self.gamma = 0.9
         self.dataframe = pd.DataFrame()
         self.short_memory = np.array([])
@@ -40,33 +40,32 @@ class DQNAgent(object):
 
         return model
 
-    def set_reward(self, crash, eaten):
-        self.reward = 0
-        if crash:
-            self.reward = -10
-        elif eaten:
-            self.reward = 10
+    def get_move(self, state):
+        # perform random actions based on agent.epsilon, or choose the action
+        if random.randint(0, 1) < self.epsilon:
+            return to_categorical(random.randint(0, 2), num_classes=3)
+            
+        # predict action based on the old state
+        prediction = self.model.predict(state)
+        return to_categorical(np.argmax(prediction[0]), num_classes=3)
 
-    def remember(self, state, action, next_state, done):
-        self.memory.append((state, action, self.reward, next_state, done))
 
-    def replay_new(self, memory, batch_size):
+    def remember(self, state, action, reward, next_state, done):
+        self.memory.append((state, action, reward, next_state, done))
+
+    def replay_memory(self, batch_size):
+        memory = self.memory
         if len(memory) > batch_size:
             minibatch = random.sample(memory, batch_size)
         else:
             minibatch = memory
         for state, action, reward, next_state, done in minibatch:
-            target = reward
-            if not done:
-                target = reward + self.gamma * np.amax(self.model.predict(np.array([next_state]))[0])
-            target_f = self.model.predict(np.array([state]))
-            target_f[0][np.argmax(action)] = target
-            self.model.fit(np.array([state]), target_f, epochs=1, verbose=0)
+            self.train_short_memory(state, action, reward, next_state, done)
 
-    def train_short_memory(self, state, action, next_state, done):
-        target = self.reward
+    def train_short_memory(self, state, action, reward, next_state, done):
+        target = reward
         if not done:
-            target = self.reward + self.gamma * np.amax(self.model.predict(next_state.reshape((1, 11)))[0])
-        target_f = self.model.predict(state.reshape((1, 11)))
+            target = reward + self.gamma * np.amax(self.model.predict(next_state)[0])
+        target_f = self.model.predict(state)
         target_f[0][np.argmax(action)] = target
-        self.model.fit(state.reshape((1, 11)), target_f, epochs=1, verbose=0)
+        self.model.fit(state, target_f, epochs=1, verbose=0)
