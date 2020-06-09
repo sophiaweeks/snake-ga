@@ -1,0 +1,6 @@
+pygame
+keras
+tensorflow
+pandas
+seaborn
+numpy
