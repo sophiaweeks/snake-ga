@@ -71,7 +71,7 @@ def play(display_on, speed, params):
     counter_plot = []
 
     while counter_games < params['episodes']:
-        game = Game(440, 440, high_score)
+        game = Game(20, 20, high_score)
 
         if display_on:
             game.update_display()
@@ -112,7 +112,7 @@ def train(display_on, speed, params):
     counter_plot = []
 
     while counter_games < params['episodes']:
-        game = Game(440, 440, high_score)
+        game = Game(20, 20, high_score)
 
         if display_on:
             game.update_display()
