@@ -44,7 +44,7 @@ class Game:
         self.try_eat()
         
     def get_state(self):
-        return np.array([
+        return np.array([[
             self.get_danger_player_right(),
             self.get_danger_player_straight(),
             self.get_danger_player_left(),
@@ -56,7 +56,7 @@ class Game:
             self.get_food_right(),
             self.get_food_up(),
             self.get_food_down()
-            ])
+            ]])
         
     def update_ui(self):
         self.gameDisplay.fill((255, 255, 255))
