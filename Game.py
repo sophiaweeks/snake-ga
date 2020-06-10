@@ -7,14 +7,16 @@ Created on Sat Jun  6 16:46:22 2020
 import pygame
 from Player import Player, Direction
 from Food import Food
+from World import InputModel
 from random import randint
 import numpy as np
 
 class Game:
-    def __init__(self, game_width, game_height, high_score):
+    def __init__(self, world, high_score):
         pygame.display.set_caption('SnakeGen')
-        self.game_width = game_width
-        self.game_height = game_height
+        self.game_width = world.width
+        self.game_height = world.height
+        self.input_model = world.input_model
 
         # initialize rendering info
         self.display_unit_size = 20
@@ -51,19 +53,35 @@ class Game:
         self.try_eat()
 
     def get_state(self):
-        return np.array([[
-            self.get_danger_player_right(),
-            self.get_danger_player_straight(),
-            self.get_danger_player_left(),
-            self.get_moving_left(),
-            self.get_moving_right(),
-            self.get_moving_up(),
-            self.get_moving_down(),
-            self.get_food_left(),
-            self.get_food_right(),
-            self.get_food_up(),
-            self.get_food_down()
-            ]])
+        if self.input_model == InputModel.WORLD:
+            state = np.array([np.concatenate([
+                [self.player.x / self.game_width,
+                self.player.y / self.game_height,
+                self.get_moving_left(),
+                self.get_moving_right(),
+                self.get_moving_up(),
+                self.get_moving_down(),
+                self.get_food_left(),
+                self.get_food_right(),
+                self.get_food_up(),
+                self.get_food_down()],
+                self.get_bp_grid().flatten(),
+            ])])
+            return state
+        elif self.input_model == InputModel.LOCAL:
+            return np.array([[
+                self.get_danger_player_right(),
+                self.get_danger_player_straight(),
+                self.get_danger_player_left(),
+                self.get_moving_left(),
+                self.get_moving_right(),
+                self.get_moving_up(),
+                self.get_moving_down(),
+                self.get_food_left(),
+                self.get_food_right(),
+                self.get_food_up(),
+                self.get_food_down()
+                ]])
 
     def update_ui(self):
         self.gameDisplay.fill((255, 255, 255))
@@ -226,4 +244,16 @@ class Game:
 
     def get_food_down(self):
         return (int)(self.food.y > self.player.y)
+
+    def get_pos_validity(self, pos):
+        [x, y] = pos
+        return (0 <= x and x < self.game_width and
+            0 <= y and y < self.game_height)
+
+    def get_bp_grid(self):
+        grid = np.zeros((self.game_width, self.game_height))
+        for bp in self.player.body_positions:
+            if self.get_pos_validity(bp):
+                grid[bp] = 1
+        return grid
 

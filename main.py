@@ -7,6 +7,7 @@ Created on Sat Jun  6 18:01:15 2020
 
 import pygame
 from Game import Game
+from World import InputModel, World
 import argparse
 from DQN import DQNAgent
 import numpy as np
@@ -20,13 +21,16 @@ def define_parameters():
     params['first_layer_size'] = 150   # neurons in the first layer
     params['second_layer_size'] = 150   # neurons in the second layer
     params['third_layer_size'] = 150    # neurons in the third layer
-    params['episodes'] = 150
+    params['episodes'] = 500
     params['memory_size'] = 2500
     params['batch_size'] = 500
     params['weights_path'] = 'weights/weights.hdf5'
     params['load_weights'] = True
     params['train'] = False
     params['bayesian_optimization'] = False
+
+    params['game_world'] = World(20, 20, InputModel.LOCAL)
+    params['input_vector_len'] = params['game_world'].input_vector_len()
     return params
 
 def plot_seaborn(array_counter, array_score):
@@ -71,7 +75,7 @@ def play(display_on, speed, params):
     counter_plot = []
 
     while counter_games < params['episodes']:
-        game = Game(20, 20, high_score)
+        game = Game(params['game_world'], high_score)
 
         if display_on:
             game.update_display()
@@ -112,7 +116,7 @@ def train(display_on, speed, params):
     counter_plot = []
 
     while counter_games < params['episodes']:
-        game = Game(20, 20, high_score)
+        game = Game(params['game_world'], high_score)
 
         if display_on:
             game.update_display()

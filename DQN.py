@@ -15,23 +15,24 @@ class DQNAgent(object):
         self.short_memory = np.array([])
         self.agent_target = 1
         self.agent_predict = 0
-        self.learning_rate = params['learning_rate']        
+        self.learning_rate = params['learning_rate']
         self.epsilon = 1
         self.actual = []
         self.first_layer = params['first_layer_size']
         self.second_layer = params['second_layer_size']
         self.third_layer = params['third_layer_size']
+        self.input_dim = params['input_vector_len']
         self.memory = collections.deque(maxlen=params['memory_size'])
         self.weights = params['weights_path']
         self.load_weights = params['load_weights']
         self.model = self.network()
-        
+
         if (params['load_weights']):
             self.model.load_weights(params['weights_path'])
 
     def network(self):
         model = Sequential()
-        model.add(Dense(units=self.first_layer, activation='relu', input_dim=11))
+        model.add(Dense(units=self.first_layer, activation='relu', input_dim=self.input_dim))
         model.add(Dense(units=self.second_layer, activation='relu'))
         model.add(Dense(units=self.third_layer, activation='relu'))
         model.add(Dense(units=3, activation='softmax'))
@@ -44,7 +45,7 @@ class DQNAgent(object):
         # perform random actions based on agent.epsilon, or choose the action
         if random.randint(0, 1) < self.epsilon:
             return to_categorical(random.randint(0, 2), num_classes=3)
-            
+
         # predict action based on the old state
         prediction = self.model.predict(state)
         return to_categorical(np.argmax(prediction[0]), num_classes=3)
