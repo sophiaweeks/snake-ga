@@ -4,3 +4,4 @@ tensorflow
 pandas
 seaborn
 numpy
+neat-python

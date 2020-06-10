@@ -1,3 +1,4 @@
 bayesOpt.py
 *.idea
 __pycache__
+*.swp
